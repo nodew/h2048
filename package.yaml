@@ -30,6 +30,8 @@ library:
   exposed-modules:
   - H2048.Renderer
   - H2048.Types
+  - H2048.Core
+  - Graphics.Gloss.Interface.FRP.ReactiveBanana
 
 executables:
   h2048-exe:
