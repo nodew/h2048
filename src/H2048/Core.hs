@@ -9,6 +9,13 @@ tile2Probability = 0.9
 initBoard :: Board
 initBoard = Board $ (replicate 4 . replicate 4) Empty
 
+initGameState :: GameState
+initGameState = GameState {
+    board = initBoard
+  , score = 0
+  , status = Begin
+  }
+
 getEmptyTilesPos :: Board -> [(Int, Int)]
 getEmptyTilesPos (Board b) = map fst emptyTiles
   where
@@ -46,7 +53,7 @@ slideRow xs = (tiles, score')
     tiles = take 4 $ (filter (/= Empty) $ map fst tilesAndScores) ++ replicate 4 Empty
 
 groupByTowEle :: Eq a => [a] -> [[a]]
-groupByTowEle [] = [[]]
+groupByTowEle [] = []
 groupByTowEle (x:[]) = [[x]]
 groupByTowEle (x:y:xs)
   | x == y    = [x, y] : groupByTowEle xs

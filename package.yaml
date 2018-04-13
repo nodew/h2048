@@ -31,6 +31,7 @@ library:
   - H2048.Renderer
   - H2048.Types
   - H2048.Core
+  - H2048.Game
   - Graphics.Gloss.Interface.FRP.ReactiveBanana
 
 executables:
