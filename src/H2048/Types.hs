@@ -1,14 +1,16 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module H2048.Types where
 
--- import System.Random
 import Graphics.Gloss.Data.Color
+import Control.Lens
 
 data Tile = Tile Int
           | Empty
           deriving (Show, Eq)
 
-data TileStyle = TileStyle {
-    backColor :: Color
+data TileStyle = TileStyle
+  { backColor :: Color
   , fontColor :: Color
   }
 
@@ -27,15 +29,16 @@ data Direction = DUp
                | DRight
                deriving (Show, Eq)
 
-data GameState = GameState {
-    board     :: Board
-  , score     :: Score
-  , status    :: GameStatus
-  -- , gen       :: StdGen
+data GameState = GameState
+  { _board  :: Board
+  , _score  :: Score
+  , _status :: GameStatus
   } deriving (Show)
 
-data GameRecord = GameRecord {
-    state     :: GameState
+makeLenses ''GameState
+
+data GameRecord = GameRecord
+  { state     :: GameState
   , direction :: Direction
   } deriving (Show)
 

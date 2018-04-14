@@ -1,5 +1,6 @@
 module H2048.Renderer where
 
+import Control.Lens hiding (Empty)
 import Graphics.Gloss.Data.Picture
 import Graphics.Gloss.Data.Color
 import H2048.Types
@@ -98,8 +99,8 @@ renderBoard (Board tiles) =
 
 renderApp :: GameState -> Picture
 renderApp gameState =
-  pictures [ translate (-215) 250 $ renderScore $ score gameState
-           , renderBoard $ board gameState
+  pictures [ translate (-215) 250 $ renderScore $ gameState^.score
+           , renderBoard $ gameState^.board
            ]
 
 getTileBgColor :: Tile -> TileStyle

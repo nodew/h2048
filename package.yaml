@@ -24,6 +24,7 @@ dependencies:
 - gloss
 - reactive-banana
 - random
+- lens
 
 library:
   source-dirs: src

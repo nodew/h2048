@@ -18,7 +18,7 @@ type InputEvent = G.Event
 playBanana ∷ Display -- ^ The display method
            -> Color   -- ^ The background colour
            -> Int     -- ^ The refresh rate, in Hertz
-           -> (Event InputEvent -> Moment (Behavior Picture))
+           -> (Event InputEvent -> MomentIO (Behavior Picture))
            -> IO ()
 playBanana display colour frequency mainBanana = do
   picRef <- newIORef blank
@@ -27,7 +27,7 @@ playBanana display colour frequency mainBanana = do
   network <-
     compile $ do
       glossEvent <- fromAddHandler eventHandler
-      picture <- liftMoment (mainBanana glossEvent)
+      picture <- mainBanana glossEvent
       changes picture >>= reactimate' . fmap (fmap (writeIORef picRef))
       valueBLater picture >>= liftIO . writeIORef picRef
   actuate network
