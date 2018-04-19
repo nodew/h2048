@@ -1,8 +1,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
-
+{-# LANGUAGE RecursiveDo         #-}
 module H2048.Game where
 
 import System.Random
+import System.IO.Unsafe
+import System.Exit
 import Reactive.Banana
 import Reactive.Banana.Frameworks
 import Graphics.Gloss
@@ -52,35 +54,39 @@ isStart :: InputEvent -> Bool
 isStart = isTheKeyDown $ (==) (SpecialKey KeySpace)
 
 runGame :: Event InputEvent -> MomentIO (Behavior Picture)
-runGame inputEvent = do
+runGame inputEvent = mdo
   initialStdGen <- liftIO newStdGen
-  let eMove = fromJust . keyDown2dir <$> filterE isValidMove inputEvent :: Event Direction
-      -- eQuit = filterE isEsc inputEvent
-      eStart = filterE isStart inputEvent
+  let eMove  = fromJust . keyDown2dir <$> filterE isValidMove inputEvent :: Event Direction
+      eStart = filterE isStart inputEvent :: Event InputEvent
+  gameState :: (Behavior GameState) <-
+    accumB (getInitGameState initialStdGen) $ unions [ slideBoardHandler <$> eMove
+                                                     , startGameHandler <$ eStart
+                                                     , (\st -> st & status .~ GameOver) <$ gameOver
+                                                     ]
+  let gameOver = whenE (isGameOver <$> gameState) eMove
+  return $ renderApp <$> gameState
 
-  gameState :: (Behavior (GameState, StdGen)) <-
-    accumB (initGameState, initialStdGen) $ unions [ slideBoardHandler <$> eMove
-                                                   , startGameHandler <$ eStart
-                                                   ]
-  return $ renderApp . fst <$> gameState
+getInitGameState :: StdGen -> GameState
+getInitGameState g = GameState
+  { _board = initBoard
+  , _score = 0
+  , _status = Begin
+  , _gen = g
+  }
 
-slideBoardHandler :: Direction -> (GameState, StdGen) -> (GameState, StdGen)
-slideBoardHandler d (s, g) =
-  case s^.status of
-    InProgress ->
-      let (board', score') = slideBoard d (s^.board)
-      in if board' == s^.board then (s, g)
-         else let (board'', g') = insertRandomTile g board'
-              in (s & board .~ board'' & score +~ score', g')
-    _ -> (s, g)
+slideBoardHandler :: Direction -> GameState -> GameState
+slideBoardHandler d s@(GameState _ _ InProgress _) =
+  let (board', score') = slideBoard d (s^.board)
+  in if board' == s^.board then s
+        else let (board'', g') = insertRandomTile (s^.gen) board'
+             in s & board .~ board'' & score +~ score' & gen .~ g'
+slideBoardHandler _ s = s
 
-startGameHandler :: (GameState, StdGen) -> (GameState, StdGen)
-startGameHandler (s, g) =
-  case s^.status of
-    InProgress -> (s, g)
-    _          -> (s & board .~ board'' & status .~ InProgress, g'')
+startGameHandler :: GameState -> GameState
+startGameHandler s@(GameState _ _ InProgress _) = s
+startGameHandler s = s & board .~ board'' & status .~ InProgress & gen .~ g''
   where
-    (board', g')   = insertRandomTile g initBoard
+    (board', g')   = insertRandomTile (s^.gen) initBoard
     (board'', g'') = insertRandomTile g' board'
 
 insertRandomTile :: StdGen -> Board -> (Board, StdGen)

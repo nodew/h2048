@@ -1,20 +1,14 @@
 module H2048.Core where
 
-import H2048.Types
 import Data.List (transpose)
+import Control.Lens hiding (Empty)
+import H2048.Types
 
 tile2Probability :: Float
 tile2Probability = 0.9
 
 initBoard :: Board
 initBoard = Board $ (replicate 4 . replicate 4) Empty
-
-initGameState :: GameState
-initGameState = GameState
-  { _board = initBoard
-  , _score = 0
-  , _status = Begin
-  }
 
 getEmptyTilesPos :: Board -> [(Int, Int)]
 getEmptyTilesPos (Board b) = map fst emptyTiles
@@ -47,14 +41,16 @@ slideBoard d b = (slidedBoard, score')
 slideRow :: [Tile] -> ([Tile], Score)
 slideRow xs = (tiles, score')
   where
-    group'        = groupByTowEle xs
-    tilesAndScores = group' >>= \ys -> return $ if length ys == 2 then head ys +++ last ys else (head ys, 0)
-    score' = sum $ map snd tilesAndScores
-    tiles = take 4 $ (filter (/= Empty) $ map fst tilesAndScores) ++ replicate 4 Empty
+    group'         = groupByTowEle xs
+    tilesAndScores = group' >>= \ys -> return $ if length ys == 2
+                                                  then head ys +++ last ys
+                                                  else (head ys, 0)
+    score'         = sum $ map snd tilesAndScores
+    tiles          = take 4 $ filter (/= Empty) (map fst tilesAndScores) ++ replicate 4 Empty
 
 groupByTowEle :: [Tile] -> [[Tile]]
-groupByTowEle [] = []
-groupByTowEle (x:[]) = [[x]]
+groupByTowEle []  = []
+groupByTowEle [x] = [[x]]
 groupByTowEle (x:y:xs)
   | x == Empty = groupByTowEle (y:xs)
   | y == Empty = groupByTowEle (x:xs)
@@ -64,17 +60,14 @@ groupByTowEle (x:y:xs)
 -- add two Tile, return new Tile and score
 (+++) :: Tile -> Tile -> (Tile, Score)
 Tile a +++ Tile b = (Tile $ a + b, a + b)
-Empty  +++ Tile b = (Tile b, b)
-Tile a +++ Empty  = (Tile a, a)
+Empty  +++ Tile b = (Tile b, 0)
+Tile a +++ Empty  = (Tile a, 0)
 Empty  +++ Empty  = (Empty, 0)
 
-updateAt :: [a] -> Int -> a -> [a]
-updateAt lst index a = map (\(x, i) -> if i == index then a else x) $ zip lst [0..]
-
 insertTile :: (Int, Int) -> Tile -> Board -> Board
-insertTile (row, col) tile (Board b) = Board $ updateAt b row $ updateAt r col tile
+insertTile (row, col) tile (Board b) = Board $ b & ix row .~ (row' & ix col .~ tile)
   where
-    r  = b !! row
+    row' = b !! row
 
 genNewTile :: Float -> Tile
 genNewTile p = if p < tile2Probability then Tile 2 else Tile 4
@@ -82,3 +75,17 @@ genNewTile p = if p < tile2Probability then Tile 2 else Tile 4
 -- clockwise rotate Board
 rotateBoard :: Board -> Board
 rotateBoard (Board b) = Board $ reverse $ transpose b
+
+isGameOver :: GameState -> Bool
+isGameOver st =
+  let b = st ^. board
+      slidUp = fst $ slideBoard DUp b
+      slidDown = fst $ slideBoard DDown b
+      slidLeft = fst $ slideBoard DLeft b
+      slidRight = fst $ slideBoard DRight b
+  in and [ b /= initBoard
+          , slidUp == slidDown
+          , slidDown == slidLeft
+          , slidLeft == slidRight
+          , slidRight == b
+          ]

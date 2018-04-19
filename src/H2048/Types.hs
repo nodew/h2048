@@ -4,6 +4,7 @@ module H2048.Types where
 
 import Graphics.Gloss.Data.Color
 import Control.Lens
+import System.Random
 
 data Tile = Tile Int
           | Empty
@@ -33,13 +34,7 @@ data GameState = GameState
   { _board  :: Board
   , _score  :: Score
   , _status :: GameStatus
+  , _gen    :: StdGen
   } deriving (Show)
 
 makeLenses ''GameState
-
-data GameRecord = GameRecord
-  { state     :: GameState
-  , direction :: Direction
-  } deriving (Show)
-
-type GameRecords = [GameRecord]

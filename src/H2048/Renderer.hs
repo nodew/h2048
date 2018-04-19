@@ -101,7 +101,15 @@ renderApp :: GameState -> Picture
 renderApp gameState =
   pictures [ translate (-215) 250 $ renderScore $ gameState^.score
            , renderBoard $ gameState^.board
+           , gameTip
            ]
+  where
+    gameTip = case gameState^.status of
+                Begin    -> translate (-190) (-10) $ scale 0.2 0.2 $ Text "Click SpaceKey to start game"
+                GameOver -> translate (-80) (-10) $ scale 0.3 0.3 $ Text "Game Over"
+                _        -> pictures []
+
+
 
 getTileBgColor :: Tile -> TileStyle
 getTileBgColor tile = case tile of
