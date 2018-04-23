@@ -18,3 +18,8 @@ stack build
 stack exec h2048-exe
 
 ```
+
+## TODO
+- [ ] an elegent way to exit the game
+- [ ] store scores to disk
+- [ ] improve the font rendering

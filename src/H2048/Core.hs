@@ -76,16 +76,15 @@ genNewTile p = if p < tile2Probability then Tile 2 else Tile 4
 rotateBoard :: Board -> Board
 rotateBoard (Board b) = Board $ reverse $ transpose b
 
-isGameOver :: GameState -> Bool
-isGameOver st =
-  let b = st ^. board
-      slidUp = fst $ slideBoard DUp b
-      slidDown = fst $ slideBoard DDown b
-      slidLeft = fst $ slideBoard DLeft b
+isGameOver :: Board -> Bool
+isGameOver b =
+  let slidUp    = fst $ slideBoard DUp b
+      slidDown  = fst $ slideBoard DDown b
+      slidLeft  = fst $ slideBoard DLeft b
       slidRight = fst $ slideBoard DRight b
-  in and [ b /= initBoard
-          , slidUp == slidDown
-          , slidDown == slidLeft
-          , slidLeft == slidRight
-          , slidRight == b
-          ]
+  in and [ b         /= initBoard
+         , slidUp    == slidDown
+         , slidDown  == slidLeft
+         , slidLeft  == slidRight
+         , slidRight == b
+         ]

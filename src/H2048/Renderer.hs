@@ -97,6 +97,17 @@ renderBoard (Board tiles) =
                  (zip tiles [1.5, 0.5, -0.5, -1.5])
   where rowHeight = tileEdgeL + gapWidth
 
+renderGameStartTip :: Picture
+renderGameStartTip = translate (-190) (-10) $ scale 0.2 0.2 $ Text "Type SpaceKey to start game"
+
+renderGameOverTip :: Picture
+renderGameOverTip =
+  pictures [ color (makeColorI 255 0 0 0) $ translate (-110) 30 $ scale 0.3 0.3 $ Text "Game Over"
+           , translate (-160) (-30) $ scale 0.2 0.2 $ Text "Type SpaceKey to restart"
+           , translate (-140) (-70) $ scale 0.2 0.2 $ Text "or type ESC to exit"
+           ]
+
+
 renderApp :: GameState -> Picture
 renderApp gameState =
   pictures [ translate (-215) 250 $ renderScore $ gameState^.score
@@ -105,8 +116,8 @@ renderApp gameState =
            ]
   where
     gameTip = case gameState^.status of
-                Begin    -> translate (-190) (-10) $ scale 0.2 0.2 $ Text "Click SpaceKey to start game"
-                GameOver -> translate (-80) (-10) $ scale 0.3 0.3 $ Text "Game Over"
+                Begin    -> renderGameStartTip
+                GameOver -> renderGameOverTip
                 _        -> pictures []
 
 

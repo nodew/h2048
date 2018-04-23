@@ -56,14 +56,14 @@ isStart = isTheKeyDown $ (==) (SpecialKey KeySpace)
 runGame :: Event InputEvent -> MomentIO (Behavior Picture)
 runGame inputEvent = mdo
   initialStdGen <- liftIO newStdGen
-  let eMove  = fromJust . keyDown2dir <$> filterE isValidMove inputEvent :: Event Direction
-      eStart = filterE isStart inputEvent :: Event InputEvent
+  let moveE  = fromJust . keyDown2dir <$> filterE isValidMove inputEvent :: Event Direction
+      startE = filterE isStart inputEvent :: Event InputEvent
   gameState :: (Behavior GameState) <-
-    accumB (getInitGameState initialStdGen) $ unions [ slideBoardHandler <$> eMove
-                                                     , startGameHandler <$ eStart
-                                                     , (\st -> st & status .~ GameOver) <$ gameOver
+    accumB (getInitGameState initialStdGen) $ unions [ slideBoardHandler <$> moveE
+                                                     , startGameHandler <$ startE
+                                                     , (\st -> st & status .~ GameOver) <$ gameOverE
                                                      ]
-  let gameOver = whenE (isGameOver <$> gameState) eMove
+  let gameOverE = whenE (isGameOver . _board <$> gameState) moveE
   return $ renderApp <$> gameState
 
 getInitGameState :: StdGen -> GameState
