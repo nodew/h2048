@@ -12,31 +12,34 @@ import System.Exit
 
 type InputEvent = G.Event
 
-playBanana ∷ Display -- ^ The display method
-           -> Color   -- ^ The background colour
-           -> Int     -- ^ The refresh rate, in Hertz
-           -> (Event InputEvent -> MomentIO (Behavior Picture))
-           -> IO ()
+playBanana
+    :: Display -- ^ The display method
+    -> Color   -- ^ The background colour
+    -> Int     -- ^ The refresh rate, in Hertz
+    -> (Event InputEvent -> MomentIO (Behavior Picture))
+    -> IO ()
 playBanana display colour fps mainBanana = do
-  picRef <- newIORef blank
-  (eventHandler, fireEvent) <- newAddHandler
-  -- ^ exit program when `ESC` key down
-  let handleEvent e@(G.EventKey k G.Down _ _) =
-        case k of
-          (G.SpecialKey G.KeyEsc) -> exitSuccess
-          _                       -> fireEvent e
-      handleEvent e = fireEvent e
+    picRef                    <- newIORef blank
+    (eventHandler, fireEvent) <- newAddHandler
+    -- ^ exit program when `ESC` key down
+    let handleEvent e@(G.EventKey k G.Down _ _) = case k of
+            (G.SpecialKey G.KeyEsc) -> exitSuccess
+            _                       -> fireEvent e
+        handleEvent e = fireEvent e
 
-  network <-
-    compile $ do
-      glossEvent <- fromAddHandler eventHandler
-      picture <- mainBanana glossEvent
-      changes picture >>= reactimate' . fmap (fmap (writeIORef picRef))
-      valueBLater picture >>= liftIO . writeIORef picRef
-  actuate network
+    network <- compile $ do
+        glossEvent <- fromAddHandler eventHandler
+        picture    <- mainBanana glossEvent
+        changes picture >>= reactimate' . fmap (fmap (writeIORef picRef))
+        valueBLater picture >>= liftIO . writeIORef picRef
+    actuate network
 
-  playIO display colour fps ()
-    (\() -> readIORef picRef)
-    (\e () -> handleEvent e)
-    (\_ () -> pure ())
+    playIO display
+           colour
+           fps
+           ()
+           (\() -> readIORef picRef)
+           (\e () -> handleEvent e)
+           (\_ () -> pure ())
+
 
